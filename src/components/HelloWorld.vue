@@ -13,7 +13,7 @@
         <div class="form-group row">
           <label for="interes" class="col-3 col-form-label">Intereses</label>
           <div class="col-4">
-            <input type="number" class="form-control" id="interes" v-model="interes">
+            <input type="text" class="form-control" id="interes" v-model="interes">
           </div>
           <div class="col-5">
             <select v-model="interesTipo" class="form-control">
@@ -62,32 +62,40 @@
     </div>
     <div style="text-align: center;">
       <br>
-      <p>
-        El prestamo es por Gs. {{ monto }} que se pagara en {{ plazo }} {{ plazoTipo }} de manera {{ pago }}, con un interes del {{ interes }}% {{ interesTipo }}
-      </p>
+      <h4>
+        El prestamo es por {{ monto | currency('Gs. ', 0, { thousandsSeparator: '.' , decimalSeparator: ',' })}}
+        <br>Que se pagara en {{ plazo }} {{ plazoTipo }} de manera {{ pago }}
+        <br>Con un interes del {{ interes }}% {{ interesTipo }} utilizando el sistema {{ tipoPrestamo }}
+      </h4>
       <br>
     </div>
     <div class="container">
-      <table class="table table-sm table-striped">
+      <table class="table table-sm table-striped table-responsive-lg">
         <thead style="text-align: center;" class="thead-light">
           <tr>
             <th scope="col-1">Cuota</th>
             <th scope="col-3">Amortizacion</th>
-            <th scope="col-2">Interes</th>
-            <th scope="col-3">A pagar</th>
+            <th scope="col-2">Interes del periodo</th>
+            <th scope="col-3">Cuota a pagar</th>
             <th scope="col-3">Deuda restante</th>
           </tr>
         </thead>
         <tbody style="text-align: right;" v-if="mostrarTabla">
           <tr v-for="item in tablaCuotas" v-bind:key="item.numero">
             <th scope="row">{{item.numero}}</th>
-            <td>Gs. {{item.monto}}</td>
-            <td>Gs. {{item.interes}}</td>
-            <td>Gs. {{item.total}}</td>
-            <td>Gs. {{item.restante}}</td>
+            <td>{{item.monto | currency('Gs. ', 0, { thousandsSeparator: '.' , decimalSeparator: ',' })}}</td>
+            <td>{{item.interes | currency('Gs. ', 0, { thousandsSeparator: '.' , decimalSeparator: ',' })}}</td>
+            <td>{{item.total | currency('Gs. ', 0, { thousandsSeparator: '.' , decimalSeparator: ',' })}}</td>
+            <td>{{item.restante | currency('Gs. ', 0, { thousandsSeparator: '.' , decimalSeparator: ',' })}}</td>
           </tr>
         </tbody>
       </table>
+    </div>
+    <div>
+      <footer>
+        <br>
+        <p>Puede visitar <a href="https://www.a1.com.py">mi pagina</a> para ver otros proyectos</p>
+      </footer>
     </div>
   </div>
 </template>
@@ -185,21 +193,24 @@ export default {
       var array = []
       var cuota = 0
       var restante = this.monto
-      var prestamo = restante
       var interes = 0
       var amortiza = 0
+      var total = 0
+      array.push({
+        'numero': 0,
+        'monto': '',
+        'interes': '',
+        'total': '',
+        'restante': restante
+      })
       if (this.tipoPrestamo === 'Frances') {
+        var prestamo = restante
         var numerador = this.interesEfectivo * Math.pow((1 + this.interesEfectivo), this.totalCuotas)
         var denominador = Math.pow((1 + this.interesEfectivo), this.totalCuotas) - 1
         cuota = Math.round(this.monto * (numerador / denominador))
         restante = cuota * this.totalCuotas
-        array.push({
-          'numero': 0,
-          'monto': 0,
-          'interes': 0,
-          'total': 0,
-          'restante': restante
-        })
+        total = restante
+        array[0].restante = restante
         for (let i = 0; i < this.totalCuotas; i++) {
           restante = restante - cuota
           interes = Math.round(prestamo * this.interesEfectivo)
@@ -213,14 +224,64 @@ export default {
             'restante': restante
           })
         }
+        array.push({
+          'numero': 'Total',
+          'monto': '',
+          'interes': '',
+          'total': total,
+          'restante': ''
+        })
       }
       if (this.tipoPrestamo === 'Aleman') {
+        amortiza = this.monto / this.totalCuotas
+        for (let i = 0; i < this.totalCuotas; i++) {
+          interes = restante * this.interesEfectivo
+          cuota = amortiza + interes
+          restante = restante - amortiza
+          array.push({
+            'numero': i + 1,
+            'monto': amortiza,
+            'interes': interes,
+            'total': cuota,
+            'restante': restante
+          })
+          total = total + cuota
+        }
         array.push({
-          'numero': 0,
-          'monto': 0,
-          'interes': 0,
-          'total': 0,
-          'restante': restante
+          'numero': 'Total',
+          'monto': '',
+          'interes': '',
+          'total': total,
+          'restante': ''
+        })
+      }
+      if (this.tipoPrestamo === 'Americano') {
+        interes = restante * this.interesEfectivo
+        for (let i = 1; i < this.totalCuotas; i++) {
+          array.push({
+            'numero': i,
+            'monto': amortiza,
+            'interes': interes,
+            'total': interes,
+            'restante': restante
+          })
+          total = total + interes
+        }
+        amortiza = parseInt(restante) + parseInt(interes)
+        array.push({
+          'numero': this.totalCuotas,
+          'monto': restante,
+          'interes': interes,
+          'total': amortiza,
+          'restante': 0
+        })
+        total = total + amortiza
+        array.push({
+          'numero': 'Total',
+          'monto': '',
+          'interes': '',
+          'total': total,
+          'restante': ''
         })
       }
       return array
