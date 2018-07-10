@@ -14,7 +14,7 @@
 importScripts("https://storage.googleapis.com/workbox-cdn/releases/3.3.1/workbox-sw.js");
 
 importScripts(
-  "/precache-manifest.95d241389a726eb3eeda29819a8b044c.js"
+  "/precache-manifest.dc2eb6234fbc0f3e550f39ab0421a462.js"
 );
 
 workbox.core.setCacheNameDetails({prefix: "prestamos"});
