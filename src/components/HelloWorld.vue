@@ -68,17 +68,17 @@
       <br>
     </div>
     <div class="container">
-      <table class="table table-sm">
-        <thead style="text-align: center;">
+      <table class="table table-sm table-striped">
+        <thead style="text-align: center;" class="thead-light">
           <tr>
-            <th scope="col">Cuota</th>
-            <th scope="col">Amortizacion</th>
-            <th scope="col">Interes</th>
-            <th scope="col">A pagar</th>
-            <th scope="col">Deuda restante</th>
+            <th scope="col-1">Cuota</th>
+            <th scope="col-3">Amortizacion</th>
+            <th scope="col-2">Interes</th>
+            <th scope="col-3">A pagar</th>
+            <th scope="col-3">Deuda restante</th>
           </tr>
         </thead>
-        <tbody style="text-align: right;">
+        <tbody style="text-align: right;" v-if="mostrarTabla">
           <tr v-for="item in tablaCuotas" v-bind:key="item.numero">
             <th scope="row">{{item.numero}}</th>
             <td>Gs. {{item.monto}}</td>
@@ -88,18 +88,6 @@
           </tr>
         </tbody>
       </table>
-    </div>
-    <div>
-      <h2>Debug</h2>
-      total años: {{ totalAnhos }}
-      <br>
-      total cuotas: {{ totalCuotas }}
-      <br>
-      interes anual: {{ interesAnual }}
-      <br>
-      interesEfectivo: {{ interesEfectivo }}
-      <br>
-      multiplicador de cuota: 
     </div>
   </div>
 </template>
@@ -136,23 +124,20 @@ export default {
       if (this.plazo === 0) {
         return 0
       }
-      if (this.plazoTipo === 'Semanas') {
-        if (this.pago === 'Semanal') {
-          return this.totalAnhos * 52
-        }
-      } else {
-        if (this.pago === 'Mensual') {
-          return this.totalAnhos * 12
-        }
-        if (this.pago === 'Bimensual') {
-          return this.totalAnhos * 6
-        }
-        if (this.pago === 'Trimestral') {
-          return this.totalAnhos * 4
-        }
-        if (this.pago === 'Semestral') {
-          return this.totalAnhos * 2
-        }
+      if (this.pago === 'Semanal') {
+        return this.totalAnhos * 52
+      }
+      if (this.pago === 'Mensual') {
+        return this.totalAnhos * 12
+      }
+      if (this.pago === 'Bimensual') {
+        return this.totalAnhos * 6
+      }
+      if (this.pago === 'Trimestral') {
+        return this.totalAnhos * 4
+      }
+      if (this.pago === 'Semestral') {
+        return this.totalAnhos * 2
       }
       return this.totalAnhos
     },
@@ -160,47 +145,41 @@ export default {
       if (this.interesTipo === 'Anual') {
         return this.interes
       }
-      if (this.plazoTipo === 'Semanas') {
-        if (this.pago === 'Semanal') {
-          return (this.interes / this.totalCuotas) * 52
-        }
-      } else {
-        if (this.pago === 'Mensual') {
-          return (this.interes / this.totalCuotas) * 12
-        }
-        if (this.pago === 'Bimensual') {
-          return (this.interes / this.totalCuotas) * 6
-        }
-        if (this.pago === 'Trimestral') {
-          return (this.interes / this.totalCuotas) * 4
-        }
-        if (this.pago === 'Semestral') {
-          return (this.interes / this.totalCuotas) * 2
-        }
+      if (this.pago === 'Semanal') {
+        return (this.interes / this.totalCuotas) * 52
+      }
+      if (this.pago === 'Mensual') {
+        return (this.interes / this.totalCuotas) * 12
+      }
+      if (this.pago === 'Bimensual') {
+        return (this.interes / this.totalCuotas) * 6
+      }
+      if (this.pago === 'Trimestral') {
+        return (this.interes / this.totalCuotas) * 4
+      }
+      if (this.pago === 'Semestral') {
+        return (this.interes / this.totalCuotas) * 2
       }
       return 0
     },
     interesEfectivo: function () {
       var plazo = 1
-      if (this.plazoTipo === 'Semanas') {
-        if (this.pago === 'Semanal') {
-          plazo = 52
-        }
-      } else {
-        if (this.pago === 'Mensual') {
-          plazo = 12
-        }
-        if (this.pago === 'Bimensual') {
-          plazo = 6
-        }
-        if (this.pago === 'Trimestral') {
-          plazo = 4
-        }
-        if (this.pago === 'Semestral') {
-          plazo = 2
-        }
+      if (this.pago === 'Semanal') {
+        plazo = 52
       }
-      return (Math.round((this.interesAnual / plazo)*1000000000))/100000000000
+      if (this.pago === 'Mensual') {
+        plazo = 12
+      }
+      if (this.pago === 'Bimensual') {
+        plazo = 6
+      }
+      if (this.pago === 'Trimestral') {
+        plazo = 4
+      }
+      if (this.pago === 'Semestral') {
+        plazo = 2
+      }
+      return (Math.round((this.interesAnual / plazo) * 1000000000)) / 100000000000
     },
     tablaCuotas: function () {
       var array = []
@@ -235,7 +214,25 @@ export default {
           })
         }
       }
+      if (this.tipoPrestamo === 'Aleman') {
+        array.push({
+          'numero': 0,
+          'monto': 0,
+          'interes': 0,
+          'total': 0,
+          'restante': restante
+        })
+      }
       return array
+    },
+    mostrarTabla: function () {
+      var anhos = this.plazoTipo === 'Años'
+      var meses = this.plazoTipo === 'Meses'
+      var semanas = this.plazoTipo === 'Semanas'
+      var semanal = this.pago === 'Semanal' && (anhos || semanas)
+      var mensual = (this.pago === 'Mensual' || this.pago === 'Bimensual' || this.pago === 'Trimestral' || this.pago === 'Semestral') && (anhos || meses)
+      var anual = this.pago === 'Anual' && this.plazoTipo === 'Años'
+      return semanal || mensual || anual
     }
   }
 }
