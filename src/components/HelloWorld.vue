@@ -69,13 +69,13 @@
     </div>
     <div class="container">
       <table class="table">
-        <thead>
+        <thead style="text-align: center;">
           <tr>
             <td>Numero de cuota</td>
-            <td>Pago cuota</td>
-            <td>Pago interes</td>
-            <td>Pago total</td>
-            <td>Monto restante</td>
+            <td>Amortizacion</td>
+            <td>Interes</td>
+            <td>Monto cuota</td>
+            <td>Saldo</td>
           </tr>
         </thead>
         <tbody style="text-align: right;">
@@ -91,11 +91,15 @@
     </div>
     <div>
       <h2>Debug</h2>
-      {{ totalAnhos }}
+      total años: {{ totalAnhos }}
       <br>
-      {{ totalCuotas }}
+      total cuotas: {{ totalCuotas }}
       <br>
-      {{ montoCuotas }}
+      interes anual: {{ interesAnual }}
+      <br>
+      interesEfectivo: {{ interesEfectivo }}
+      <br>
+      multiplicador de cuota: 
     </div>
   </div>
 </template>
@@ -124,53 +128,102 @@ export default {
         return plazo
       }
       if (this.plazoTipo === 'Meses') {
-        return plazo/12
+        return plazo / 12
       }
-      return plazo/52
+      return plazo / 52
     },
     totalCuotas: function () {
       if (this.plazo === 0) {
-        return 1
+        return 0
       }
-      if (this.pago === 'Semanal') {
-        return this.totalAnhos*52
-      }
-      if (this.pago === 'Mensual') {
-        return this.totalAnhos*12
-      }
-      if (this.pago === 'Bimensual') {
-        return this.totalAnhos*6
-      }
-      if (this.pago === 'Trimestral') {
-        return this.totalAnhos*4
-      }
-      if (this.pago === 'Semestral') {
-        return this.totalAnhos*2
+      if (this.plazoTipo === 'Semanas') {
+        if (this.pago === 'Semanal') {
+          return this.totalAnhos * 52
+        }
+      } else {
+        if (this.pago === 'Mensual') {
+          return this.totalAnhos * 12
+        }
+        if (this.pago === 'Bimensual') {
+          return this.totalAnhos * 6
+        }
+        if (this.pago === 'Trimestral') {
+          return this.totalAnhos * 4
+        }
+        if (this.pago === 'Semestral') {
+          return this.totalAnhos * 2
+        }
       }
       return this.totalAnhos
     },
-    montoCuotas: function () {
-      if (this.tipoPrestamo === 'Americano') {
-        return 0
+    interesAnual: function () {
+      if (this.interesTipo === 'Anual') {
+        return this.interes
       }
-      return this.monto / this.totalCuotas
+      if (this.plazoTipo === 'Semanas') {
+        if (this.pago === 'Semanal') {
+          return (this.interes / this.totalCuotas) * 52
+        }
+      } else {
+        if (this.pago === 'Mensual') {
+          return (this.interes / this.totalCuotas) * 12
+        }
+        if (this.pago === 'Bimensual') {
+          return (this.interes / this.totalCuotas) * 6
+        }
+        if (this.pago === 'Trimestral') {
+          return (this.interes / this.totalCuotas) * 4
+        }
+        if (this.pago === 'Semestral') {
+          return (this.interes / this.totalCuotas) * 2
+        }
+      }
+      return 0
+    },
+    interesEfectivo: function () {
+      var plazo = 1
+      if (this.plazoTipo === 'Semanas') {
+        if (this.pago === 'Semanal') {
+          plazo = 52
+        }
+      } else {
+        if (this.pago === 'Mensual') {
+          plazo = 12
+        }
+        if (this.pago === 'Bimensual') {
+          plazo = 6
+        }
+        if (this.pago === 'Trimestral') {
+          plazo = 4
+        }
+        if (this.pago === 'Semestral') {
+          plazo = 2
+        }
+      }
+      return (Math.round((this.interesAnual / plazo)*1000000000))/100000000000
     },
     tablaCuotas: function () {
       var array = []
-      var totalPago = 0
+      var cuota = 0
       var restante = this.monto
-      for (let id = 0; id < 12; id++) {
-        totalPago = this.montoCuotas
-        restante = restante - totalPago
-        array.push(
-          {
-            'numero': id+1,
-            'monto': this.montoCuotas,
-            'interes': 1,
-            'total': totalPago,
+      if (this.tipoPrestamo === 'Frances') {
+        var numerador = this.interesEfectivo * Math.pow((1 + this.interesEfectivo), this.totalCuotas)
+        var denominador = Math.pow((1 + this.interesEfectivo), this.totalCuotas) - 1
+        cuota = Math.round(this.monto * (numerador / denominador))
+        restante = cuota * this.totalCuotas
+        array.push({
+          'numero': 0,
+          'total': 0,
+          'restante': restante
+        })
+        for (let i = 0; i < this.totalCuotas; i++) {
+          restante = restante - cuota
+          array.push({
+            'numero': i + 1,
+            'total': cuota,
             'restante': restante
-          }
-        )      
+          })
+        }
       }
       return array
     }
