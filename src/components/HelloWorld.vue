@@ -11,6 +11,18 @@
           </div>
         </div>
         <div class="form-group row">
+          <label for="interes" class="col-3 col-form-label">Intereses</label>
+          <div class="col-4">
+            <input type="number" class="form-control" id="interes" v-model="interes">
+          </div>
+          <div class="col-5">
+            <select v-model="interesTipo" class="form-control">
+              <option>Anual</option>
+              <option>Total</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-group row">
           <label for="plazo" class="col-3 col-form-label">Plazo</label>
           <div class="col-4">
             <input type="number" class="form-control" id="plazo" v-model="plazo">
@@ -37,18 +49,6 @@
           </div>
         </div>
         <div class="form-group row">
-          <label for="interes" class="col-3 col-form-label">Intereses</label>
-          <div class="col-4">
-            <input type="number" class="form-control" id="interes" v-model="interes">
-          </div>
-          <div class="col-5">
-            <select v-model="interesTipo" class="form-control">
-              <option>Anual</option>
-              <option>Total</option>
-            </select>
-          </div>
-        </div>
-        <div class="form-group row">
           <label for="tipoPrestamo" class="col-3 col-form-label">Tipo de prestamo</label>
           <div class="col-9">
             <select v-model="tipoPrestamo" class="form-control">
@@ -68,23 +68,23 @@
       <br>
     </div>
     <div class="container">
-      <table class="table">
+      <table class="table table-sm">
         <thead style="text-align: center;">
           <tr>
-            <td>Numero de cuota</td>
-            <td>Amortizacion</td>
-            <td>Interes</td>
-            <td>Monto cuota</td>
-            <td>Saldo</td>
+            <th scope="col">Cuota</th>
+            <th scope="col">Amortizacion</th>
+            <th scope="col">Interes</th>
+            <th scope="col">A pagar</th>
+            <th scope="col">Deuda restante</th>
           </tr>
         </thead>
         <tbody style="text-align: right;">
           <tr v-for="item in tablaCuotas" v-bind:key="item.numero">
-            <td>{{item.numero}}</td>
-            <td>{{item.monto}}</td>
-            <td>{{item.interes}}</td>
-            <td>{{item.total}}</td>
-            <td>{{item.restante}}</td>
+            <th scope="row">{{item.numero}}</th>
+            <td>Gs. {{item.monto}}</td>
+            <td>Gs. {{item.interes}}</td>
+            <td>Gs. {{item.total}}</td>
+            <td>Gs. {{item.restante}}</td>
           </tr>
         </tbody>
       </table>
@@ -206,6 +206,9 @@ export default {
       var array = []
       var cuota = 0
       var restante = this.monto
+      var prestamo = restante
+      var interes = 0
+      var amortiza = 0
       if (this.tipoPrestamo === 'Frances') {
         var numerador = this.interesEfectivo * Math.pow((1 + this.interesEfectivo), this.totalCuotas)
         var denominador = Math.pow((1 + this.interesEfectivo), this.totalCuotas) - 1
@@ -213,14 +216,21 @@ export default {
         restante = cuota * this.totalCuotas
         array.push({
           'numero': 0,
+          'monto': 0,
+          'interes': 0,
           'total': 0,
           'restante': restante
         })
         for (let i = 0; i < this.totalCuotas; i++) {
           restante = restante - cuota
+          interes = Math.round(prestamo * this.interesEfectivo)
+          amortiza = cuota - interes
+          prestamo = prestamo - amortiza
           array.push({
             'numero': i + 1,
+            'monto': amortiza,
             'total': cuota,
+            'interes': interes,
             'restante': restante
           })
         }
